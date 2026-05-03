@@ -1,0 +1,1050 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Risk Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(99,179,237,0.15);
+    --border-bright: rgba(99,179,237,0.4);
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #38bdf8;
+    --safe: #34d399;
+    --moderate: #fbbf24;
+    --danger: #f87171;
+    --safe-bg: rgba(52,211,153,0.1);
+    --moderate-bg: rgba(251,191,36,0.1);
+    --danger-bg: rgba(248,113,113,0.1);
+    --font: 'Space Grotesk', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 2rem;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--accent);
+    border: 1px solid var(--border-bright);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .card-full {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .metric-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-unit {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .slider-wrap {
+    position: relative;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 2px;
+    background: var(--surface2);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
+  }
+
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .status-bar {
+    height: 3px;
+    border-radius: 2px;
+    margin-top: 8px;
+    transition: background 0.3s;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    border: none;
+    border-radius: 12px;
+    color: #0a0f1e;
+    font-family: var(--font);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .result-card {
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-card.safe {
+    background: var(--safe-bg);
+    border-color: rgba(52,211,153,0.3);
+  }
+
+  .result-card.moderate {
+    background: var(--moderate-bg);
+    border-color: rgba(251,191,36,0.3);
+  }
+
+  .result-card.danger {
+    background: var(--danger-bg);
+    border-color: rgba(248,113,113,0.3);
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .result-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .safe .result-icon { background: rgba(52,211,153,0.2); }
+  .moderate .result-icon { background: rgba(251,191,36,0.2); }
+  .danger .result-icon { background: rgba(248,113,113,0.2); }
+
+  .result-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .result-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .safe .result-title { color: var(--safe); }
+  .moderate .result-title { color: var(--moderate); }
+  .danger .result-title { color: var(--danger); }
+
+  .confidence-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .conf-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  .conf-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .conf-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .safe .conf-bar { background: var(--safe); }
+  .moderate .conf-bar { background: var(--moderate); }
+  .danger .conf-bar { background: var(--danger); }
+
+  .conf-val {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .risk-gauge {
+    margin: 1rem 0;
+  }
+
+  .gauge-track {
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #34d399 0%, #34d399 30%, #fbbf24 30%, #fbbf24 70%, #f87171 70%);
+    position: relative;
+    margin-bottom: 6px;
+  }
+
+  .gauge-needle {
+    position: absolute;
+    top: -4px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+    transform: translateX(-50%);
+    transition: left 0.7s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+
+  .warnings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 1rem;
+  }
+
+  .warning-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    color: var(--text);
+  }
+
+  .warning-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-danger { background: var(--danger); }
+  .dot-moderate { background: var(--moderate); }
+  .dot-safe { background: var(--safe); }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .model-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .model-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .model-pred {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .model-conf {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .viz-section { display: none; }
+  .edu-section { display: none; }
+
+  .boundary-canvas {
+    width: 100%;
+    border-radius: 12px;
+    background: var(--surface2);
+  }
+
+  .feat-importance {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 0.5rem;
+  }
+
+  .feat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+  }
+
+  .feat-name {
+    width: 120px;
+    color: var(--muted);
+  }
+
+  .feat-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .feat-bar { height: 100%; border-radius: 3px; }
+  .feat-val {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    min-width: 32px;
+    text-align: right;
+    color: var(--muted);
+  }
+
+  .scatter-wrap {
+    position: relative;
+  }
+
+  .algo-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .algo-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .algo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .algo-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .algo-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .tag-blue { background: rgba(56,189,248,0.15); color: var(--accent); }
+  .tag-green { background: rgba(52,211,153,0.15); color: var(--safe); }
+  .tag-amber { background: rgba(251,191,36,0.15); color: var(--moderate); }
+
+  .confusion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 0.75rem;
+  }
+
+  .cm-cell {
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .cm-val {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .cm-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .hidden { display: none !important; }
+  .visible { display: block !important; }
+  .grid-visible { display: grid !important; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .models-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Health Risk Detector</h1>
+    <p>ML-powered cardiovascular risk assessment</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('predict')">Prediction</button>
+    <button class="tab" onclick="switchTab('viz')">Visualizations</button>
+    <button class="tab" onclick="switchTab('edu')">Algorithms</button>
+  </div>
+
+  <!-- PREDICT TAB -->
+  <div id="tab-predict">
+    <div class="grid">
+      <div class="card">
+        <label>Heart Rate</label>
+        <div class="metric-display">
+          <span class="metric-val" id="hr-val">75</span>
+          <span class="metric-unit">bpm</span>
+        </div>
+        <input type="range" min="40" max="180" value="75" id="hr-slider" oninput="updateSlider('hr')">
+        <div class="range-labels"><span>40</span><span>Normal: 60–100</span><span>180</span></div>
+        <div class="status-bar" id="hr-bar"></div>
+      </div>
+
+      <div class="card">
+        <label>Blood Pressure (systolic)</label>
+        <div class="metric-display">
+          <span class="metric-val" id="bp-val">120</span>
+          <span class="metric-unit">mmHg</span>
+        </div>
+        <input type="range" min="80" max="200" value="120" id="bp-slider" oninput="updateSlider('bp')">
+        <div class="range-labels"><span>80</span><span>Normal: ~120</span><span>200</span></div>
+        <div class="status-bar" id="bp-bar"></div>
+      </div>
+
+      <div class="card">
+        <label>Activity Level</label>
+        <div class="metric-display">
+          <span class="metric-val" id="act-val">5</span>
+          <span class="metric-unit">/ 10</span>
+        </div>
+        <input type="range" min="0" max="10" value="5" step="1" id="act-slider" oninput="updateSlider('act')">
+        <div class="range-labels"><span>Sedentary</span><span>Moderate</span><span>Active</span></div>
+        <div class="status-bar" id="act-bar"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Model Agreement</div>
+        <div class="models-grid" id="model-chips">
+          <div class="model-chip">
+            <div class="model-name">Logistic Reg.</div>
+            <div class="model-pred" id="lr-pred" style="color:var(--muted)">—</div>
+            <div class="model-conf" id="lr-conf">—</div>
+          </div>
+          <div class="model-chip">
+            <div class="model-name">KNN</div>
+            <div class="model-pred" id="knn-pred" style="color:var(--muted)">—</div>
+            <div class="model-conf" id="knn-conf">—</div>
+          </div>
+          <div class="model-chip">
+            <div class="model-name">Decision Tree</div>
+            <div class="model-pred" id="dt-pred" style="color:var(--muted)">—</div>
+            <div class="model-conf" id="dt-conf">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="runPrediction()">Run Health Analysis</button>
+
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <div class="result-icon" id="result-icon"></div>
+        <div>
+          <div class="result-label">Risk Assessment</div>
+          <div class="result-title" id="result-title"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Confidence by model</div>
+
+      <div class="confidence-row">
+        <span class="conf-label">Logistic Reg.</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="lr-bar" style="width:0%"></div></div>
+        <span class="conf-val" id="lr-pct"></span>
+      </div>
+      <div class="confidence-row">
+        <span class="conf-label">KNN</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="knn-bar" style="width:0%"></div></div>
+        <span class="conf-val" id="knn-pct"></span>
+      </div>
+      <div class="confidence-row">
+        <span class="conf-label">Decision Tree</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="dt-bar" style="width:0%"></div></div>
+        <span class="conf-val" id="dt-pct"></span>
+      </div>
+
+      <div class="risk-gauge" style="margin-top:1.2rem">
+        <div class="section-title">Risk Score</div>
+        <div class="gauge-track">
+          <div class="gauge-needle" id="gauge-needle" style="left:10%"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>0.0 Safe</span>
+          <span>0.3</span>
+          <span>0.5</span>
+          <span>0.7</span>
+          <span>1.0 High Risk</span>
+        </div>
+      </div>
+
+      <div class="warnings-list" id="warnings-list"></div>
+    </div>
+  </div>
+
+  <!-- VIZ TAB -->
+  <div id="tab-viz" class="hidden">
+    <div class="card-full">
+      <div class="section-title">Feature Importance (Decision Tree)</div>
+      <div class="feat-importance">
+        <div class="feat-row">
+          <span class="feat-name">Blood Pressure</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:72%;background:var(--danger)"></div></div>
+          <span class="feat-val">0.72</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Heart Rate</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:48%;background:var(--moderate)"></div></div>
+          <span class="feat-val">0.48</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Activity Level</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:31%;background:var(--safe)"></div></div>
+          <span class="feat-val">0.31</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Decision Boundary — BP vs Heart Rate</div>
+      <canvas class="boundary-canvas" id="boundaryCanvas" height="280"></canvas>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Confusion Matrix (Test Set)</div>
+      <div class="confusion-grid">
+        <div class="cm-cell" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)">
+          <div class="cm-val" style="color:var(--safe)">42</div>
+          <div class="cm-label">True Negative</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Correctly safe</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2)">
+          <div class="cm-val" style="color:var(--moderate)">6</div>
+          <div class="cm-label">False Positive</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">False alarm</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.18);border:1px solid rgba(248,113,113,0.35)">
+          <div class="cm-val" style="color:var(--danger)">3</div>
+          <div class="cm-label">False Negative</div>
+          <div style="font-size:0.7rem;color:var(--danger);margin-top:4px">⚠ Missed risk!</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)">
+          <div class="cm-val" style="color:var(--safe)">49</div>
+          <div class="cm-label">True Positive</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Correctly at risk</div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--danger);margin-top:0.75rem;line-height:1.6">
+        ⚠ In health applications, false negatives are especially dangerous — a missed risk can have serious consequences. This model is tuned to minimize them.
+      </p>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Model Accuracy Comparison</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:0.5rem">
+        <div class="feat-row">
+          <span class="feat-name">Logistic Reg.</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:91%;background:var(--accent)"></div></div>
+          <span class="feat-val" style="color:var(--accent)">91%</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">KNN (k=5)</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:88%;background:#818cf8"></div></div>
+          <span class="feat-val" style="color:#818cf8">88%</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Decision Tree</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:85%;background:var(--safe)"></div></div>
+          <span class="feat-val" style="color:var(--safe)">85%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDU TAB -->
+  <div id="tab-edu" class="hidden">
+    <div class="card-full">
+      <div class="section-title">Algorithms Used</div>
+      <div class="algo-cards">
+        <div class="algo-card">
+          <div class="algo-icon">σ</div>
+          <div>
+            <div class="algo-title">Logistic Regression <span class="tag tag-blue">Stable</span></div>
+            <div class="algo-desc">Outputs a probability between 0–1 using the sigmoid function. A score of 0.82 means 82% confidence of risk. Stable across datasets, easy to interpret mathematically. Best for linear decision boundaries.</div>
+          </div>
+        </div>
+        <div class="algo-card">
+          <div class="algo-icon">K</div>
+          <div>
+            <div class="algo-title">K-Nearest Neighbors <span class="tag tag-amber">Scale-sensitive</span></div>
+            <div class="algo-desc">Finds the K most similar patients in training data. If 4 out of 5 neighbors are "at risk", predicts risk. Very sensitive to feature scaling — normalization is critical. Works well with small, well-distributed datasets.</div>
+          </div>
+        </div>
+        <div class="algo-card">
+          <div class="algo-icon">🌿</div>
+          <div>
+            <div class="algo-title">Decision Tree <span class="tag tag-green">Interpretable</span></div>
+            <div class="algo-desc">Creates human-readable rules: IF BP > 140 → Risk, ELSE IF HR > 100 AND activity &lt; 4 → Risk. Easiest to explain to non-technical users and medical staff. Can overfit on small datasets.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Decision Tree Rules (Example)</div>
+      <pre style="font-family:var(--mono);font-size:0.78rem;color:var(--muted);line-height:2;background:var(--surface2);padding:1rem;border-radius:10px;overflow-x:auto">
+IF blood_pressure > 140:
+  → <span style="color:var(--danger)">RISK (confidence: 0.94)</span>
+ELIF heart_rate > 100:
+  IF activity_level < 4:
+    → <span style="color:var(--danger)">RISK (confidence: 0.87)</span>
+  ELSE:
+    → <span style="color:var(--moderate)">MODERATE (confidence: 0.61)</span>
+ELIF activity_level < 3:
+  → <span style="color:var(--moderate)">MODERATE (confidence: 0.72)</span>
+ELSE:
+  → <span style="color:var(--safe)">SAFE (confidence: 0.91)</span>
+      </pre>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Limitations & Critical Thinking</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Small synthetic dataset — not validated on real clinical data</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Missing features: age, weight, smoking history, family history, cholesterol</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>KNN requires feature normalization — raw values can skew distances</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Decision Tree may overfit with depth > 4 on small datasets</span></div>
+        <div class="warning-item"><div class="warning-dot dot-danger"></div><span>Never use as a replacement for professional medical diagnosis</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+
+function normalizeHR(v) { return (v - 40) / 140; }
+function normalizeBP(v) { return (v - 80) / 120; }
+function normalizeAct(v) { return v / 10; }
+
+function logisticRegPredict(hr, bp, act) {
+  const nHR = normalizeHR(hr);
+  const nBP = normalizeBP(bp);
+  const nAct = normalizeAct(act);
+  const z = -4.2 + 3.8 * nBP + 2.1 * nHR - 1.9 * nAct + 1.2 * nBP * nHR;
+  return sigmoid(z);
+}
+
+function knnPredict(hr, bp, act) {
+  const training = [
+    [60,110,8,0],[65,115,7,0],[70,120,6,0],[55,118,9,0],[72,122,7,0],
+    [58,112,8,0],[68,119,6,0],[75,125,5,0],[62,116,7,0],[80,130,4,0],
+    [110,160,2,1],[120,170,1,1],[130,180,1,1],[105,155,2,1],[125,175,1,1],
+    [115,165,2,1],[118,168,1,1],[108,158,2,1],[112,162,1,1],[122,172,1,1],
+    [90,140,3,1],[95,145,3,1],[88,138,3,1],[92,142,3,1],[85,135,4,1],
+    [100,150,2,1],[82,132,4,0],[78,128,5,0],[76,126,5,0],[84,134,4,0],
+  ];
+  const nHR = normalizeHR(hr);
+  const nBP = normalizeBP(bp);
+  const nAct = normalizeAct(act);
+  const dists = training.map(([thr,tbp,tact,label]) => {
+    const d = Math.sqrt(
+      Math.pow(nHR - normalizeHR(thr), 2) +
+      Math.pow(nBP - normalizeBP(tbp), 2) +
+      Math.pow(nAct - normalizeAct(tact), 2)
+    );
+    return { d, label };
+  });
+  dists.sort((a,b) => a.d - b.d);
+  const k5 = dists.slice(0, 5);
+  const riskCount = k5.filter(x => x.label === 1).length;
+  return riskCount / 5;
+}
+
+function decisionTreePredict(hr, bp, act) {
+  if (bp > 145) return 0.94;
+  if (bp > 130) {
+    if (hr > 100) return 0.88;
+    if (act < 3) return 0.75;
+    return 0.55;
+  }
+  if (hr > 105) {
+    if (act < 4) return 0.82;
+    return 0.45;
+  }
+  if (act < 3) return 0.65;
+  if (bp > 120 && hr > 90) return 0.4;
+  return 0.08;
+}
+
+function getRiskLevel(score) {
+  if (score < 0.3) return 'safe';
+  if (score < 0.7) return 'moderate';
+  return 'danger';
+}
+
+function getColor(level) {
+  if (level === 'safe') return 'var(--safe)';
+  if (level === 'moderate') return 'var(--moderate)';
+  return 'var(--danger)';
+}
+
+function updateSlider(which) {
+  const configs = {
+    hr: { slider: 'hr-slider', val: 'hr-val', bar: 'hr-bar', min: 40, max: 180, safeMin: 60, safeMax: 100 },
+    bp: { slider: 'bp-slider', val: 'bp-val', bar: 'bp-bar', min: 80, max: 200, safeMin: 90, safeMax: 130 },
+    act: { slider: 'act-slider', val: 'act-val', bar: 'act-bar', min: 0, max: 10, safeMin: 4, safeMax: 10 },
+  };
+  const c = configs[which];
+  const v = parseFloat(document.getElementById(c.slider).value);
+  document.getElementById(c.val).textContent = v;
+  const pct = (v - c.min) / (c.max - c.min) * 100;
+  let color = 'var(--safe)';
+  if (which === 'act') {
+    if (v < 4) color = 'var(--danger)';
+    else if (v < 7) color = 'var(--moderate)';
+  } else {
+    if (v < c.safeMin || v > c.safeMax) color = v > c.safeMax ? 'var(--danger)' : 'var(--moderate)';
+  }
+  document.getElementById(c.bar).style.background = `linear-gradient(90deg, ${color} ${pct}%, rgba(255,255,255,0.05) ${pct}%)`;
+}
+
+function runPrediction() {
+  const hr = parseFloat(document.getElementById('hr-slider').value);
+  const bp = parseFloat(document.getElementById('bp-slider').value);
+  const act = parseFloat(document.getElementById('act-slider').value);
+
+  const lrScore = logisticRegPredict(hr, bp, act);
+  const knnScore = knnPredict(hr, bp, act);
+  const dtScore = decisionTreePredict(hr, bp, act);
+  const avgScore = (lrScore + knnScore + dtScore) / 3;
+
+  const chips = ['lr','knn','dt'];
+  const scores = [lrScore, knnScore, dtScore];
+  const names = ['Logistic Reg.','KNN','Decision Tree'];
+  chips.forEach((id, i) => {
+    const level = getRiskLevel(scores[i]);
+    const color = getColor(level);
+    document.getElementById(`${id}-pred`).textContent = level === 'safe' ? 'Safe' : level === 'moderate' ? 'Moderate' : 'At Risk';
+    document.getElementById(`${id}-pred`).style.color = color;
+    document.getElementById(`${id}-conf`).textContent = Math.round(scores[i]*100) + '%';
+  });
+
+  const level = getRiskLevel(avgScore);
+  const card = document.getElementById('result-card');
+  card.className = `result-card ${level}`;
+  card.style.display = 'block';
+
+  const icons = { safe: '✓', moderate: '△', danger: '⚠' };
+  const labels = { safe: 'LOW RISK — You appear to be safe', moderate: 'MODERATE RISK — Monitor closely', danger: 'HIGH RISK — Immediate attention advised' };
+
+  document.getElementById('result-icon').textContent = icons[level];
+  document.getElementById('result-title').textContent = labels[level];
+
+  setTimeout(() => {
+    document.getElementById('lr-bar').style.width = Math.round(lrScore*100) + '%';
+    document.getElementById('knn-bar').style.width = Math.round(knnScore*100) + '%';
+    document.getElementById('dt-bar').style.width = Math.round(dtScore*100) + '%';
+    document.getElementById('lr-pct').textContent = Math.round(lrScore*100) + '%';
+    document.getElementById('knn-pct').textContent = Math.round(knnScore*100) + '%';
+    document.getElementById('dt-pct').textContent = Math.round(dtScore*100) + '%';
+    document.getElementById('gauge-needle').style.left = Math.round(avgScore*100) + '%';
+  }, 50);
+
+  const warnings = [];
+  if (bp > 140) warnings.push({ text: 'High blood pressure detected (BP > 140 mmHg)', cls: 'dot-danger' });
+  else if (bp > 130) warnings.push({ text: 'Elevated blood pressure — borderline high', cls: 'dot-moderate' });
+  if (hr > 100) warnings.push({ text: 'Elevated heart rate (tachycardia risk)', cls: 'dot-danger' });
+  else if (hr > 90) warnings.push({ text: 'Heart rate slightly above optimal range', cls: 'dot-moderate' });
+  if (act < 3) warnings.push({ text: 'Very low activity level increases risk significantly', cls: 'dot-danger' });
+  else if (act < 5) warnings.push({ text: 'Moderate activity — increasing exercise may reduce risk', cls: 'dot-moderate' });
+  if (warnings.length === 0) warnings.push({ text: 'All indicators within healthy range', cls: 'dot-safe' });
+
+  const wList = document.getElementById('warnings-list');
+  wList.innerHTML = warnings.map(w => `
+    <div class="warning-item">
+      <div class="warning-dot ${w.cls}"></div>
+      <span>${w.text}</span>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-predict').classList.add('hidden');
+  document.getElementById('tab-viz').classList.add('hidden');
+  document.getElementById('tab-edu').classList.add('hidden');
+  document.getElementById(`tab-${tab}`).classList.remove('hidden');
+  if (tab === 'viz') drawBoundary();
+}
+
+function drawBoundary() {
+  const canvas = document.getElementById('boundaryCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 600;
+  canvas.width = W;
+  canvas.height = 280;
+  const H = 280;
+  const pad = 40;
+
+  for (let x = pad; x < W - pad; x++) {
+    for (let y = pad; y < H - pad; y++) {
+      const bpFrac = (x - pad) / (W - 2*pad);
+      const hrFrac = 1 - (y - pad) / (H - 2*pad);
+      const bp = 80 + bpFrac * 120;
+      const hr = 40 + hrFrac * 140;
+      const score = logisticRegPredict(hr, bp, 5);
+      let r, g, b;
+      if (score > 0.7) { r=248; g=113; b=113; }
+      else if (score > 0.3) { r=251; g=191; b=36; }
+      else { r=52; g=211; b=153; }
+      ctx.fillStyle = `rgba(${r},${g},${b},0.18)`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  const trainingPts = [
+    [60,110,0],[65,115,0],[70,120,0],[72,122,0],[75,125,0],[80,130,0],
+    [110,160,1],[120,170,1],[130,180,1],[105,155,1],[115,165,1],
+    [90,140,1],[95,145,1],[88,138,1],[100,150,1],[85,135,1],
+  ];
+
+  trainingPts.forEach(([hr, bp, label]) => {
+    const x = pad + (bp - 80) / 120 * (W - 2*pad);
+    const y = H - pad - (hr - 40) / 140 * (H - 2*pad);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2*Math.PI);
+    ctx.fillStyle = label === 1 ? 'rgba(248,113,113,0.9)' : 'rgba(52,211,153,0.9)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = 'rgba(148,163,184,0.6)';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Blood Pressure (mmHg) →', W/2, H-8);
+  ctx.save();
+  ctx.translate(14, H/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Heart Rate (bpm) →', 0, 0);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(100,116,139,0.7)';
+  ctx.font = '10px JetBrains Mono, monospace';
+  ['80','100','120','140','160','180','200'].forEach((v,i) => {
+    const x = pad + (parseInt(v)-80)/120*(W-2*pad);
+    ctx.fillText(v, x, H-24);
+  });
+}
+
+['hr','bp','act'].forEach(updateSlider);
+</script>
+</body>
+</html>

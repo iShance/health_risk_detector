@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Risk Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>Health Risk Detector</h1>
+    <p>ML-powered cardiovascular risk assessment · 4 models · ensemble scoring</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('predict', this)">⚡ Prediction</button>
+    <button class="tab" onclick="switchTab('viz', this)">📊 Visualizations</button>
+    <button class="tab" onclick="switchTab('history', this)">🕐 History</button>
+    <button class="tab" onclick="switchTab('edu', this)">📚 Algorithms</button>
+  </div>
+
+  <!-- ════════════════════════════════════
+       PREDICT TAB
+       ════════════════════════════════════ -->
+  <div id="tab-predict">
+
+    <div class="grid">
+
+      <!-- Heart Rate -->
+      <div class="card">
+        <label>Heart Rate</label>
+        <div class="metric-display">
+          <span class="metric-val" id="hr-val">75</span>
+          <span class="metric-unit">bpm</span>
+        </div>
+        <input type="range" min="40" max="180" value="75" id="hr-slider" oninput="onSliderChange('hr')">
+        <div class="range-labels"><span>40</span><span>Normal: 60–100</span><span>180</span></div>
+        <div class="status-bar" id="hr-bar"></div>
+      </div>
+
+      <!-- Blood Pressure -->
+      <div class="card">
+        <label>Blood Pressure (systolic)</label>
+        <div class="metric-display">
+          <span class="metric-val" id="bp-val">120</span>
+          <span class="metric-unit">mmHg</span>
+        </div>
+        <input type="range" min="80" max="200" value="120" id="bp-slider" oninput="onSliderChange('bp')">
+        <div class="range-labels"><span>80</span><span>Normal: ~120</span><span>200</span></div>
+        <div class="status-bar" id="bp-bar"></div>
+      </div>
+
+      <!-- Activity Level -->
+      <div class="card">
+        <label>Activity Level</label>
+        <div class="metric-display">
+          <span class="metric-val" id="act-val">5</span>
+          <span class="metric-unit">/ 10</span>
+        </div>
+        <input type="range" min="0" max="10" value="5" step="1" id="act-slider" oninput="onSliderChange('act')">
+        <div class="range-labels"><span>Sedentary</span><span>Moderate</span><span>Active</span></div>
+        <div class="status-bar" id="act-bar"></div>
+      </div>
+
+      <!-- Age -->
+      <div class="card">
+        <label>Age</label>
+        <div class="metric-display">
+          <span class="metric-val" id="age-val">40</span>
+          <span class="metric-unit">years</span>
+        </div>
+        <input type="range" min="20" max="90" value="40" id="age-slider" oninput="onSliderChange('age')">
+        <div class="range-labels"><span>20</span><span>Elevated risk: 50+</span><span>90</span></div>
+        <div class="status-bar" id="age-bar"></div>
+      </div>
+
+      <!-- Cholesterol -->
+      <div class="card">
+        <label>Total Cholesterol</label>
+        <div class="metric-display">
+          <span class="metric-val" id="chol-val">180</span>
+          <span class="metric-unit">mg/dL</span>
+        </div>
+        <input type="range" min="100" max="320" value="180" id="chol-slider" oninput="onSliderChange('chol')">
+        <div class="range-labels"><span>100</span><span>Optimal: &lt;200</span><span>320</span></div>
+        <div class="status-bar" id="chol-bar"></div>
+      </div>
+
+      <!-- Smoking + Live Model Agreement -->
+      <div class="card">
+        <label>Risk Factors</label>
+        <div class="smoking-toggle">
+          <button class="toggle-btn" id="smoking-btn" onclick="toggleSmoking()">
+            <span id="smoking-icon">🚭</span>
+            <span id="smoking-label">Non-Smoker</span>
+          </button>
+        </div>
+        <div class="section-title" style="margin-top:1rem">Live Model Agreement</div>
+        <div class="models-grid">
+          <div class="model-chip">
+            <div class="model-name">Log. Reg.</div>
+            <div class="model-pred" id="lr-pred"  style="color:var(--muted)">—</div>
+            <div class="model-conf" id="lr-conf">—</div>
+          </div>
+          <div class="model-chip">
+            <div class="model-name">KNN</div>
+            <div class="model-pred" id="knn-pred" style="color:var(--muted)">—</div>
+            <div class="model-conf" id="knn-conf">—</div>
+          </div>
+          <div class="model-chip">
+            <div class="model-name">Dec. Tree</div>
+            <div class="model-pred" id="dt-pred"  style="color:var(--muted)">—</div>
+            <div class="model-conf" id="dt-conf">—</div>
+          </div>
+          <div class="model-chip">
+            <div class="model-name">Rnd. Forest</div>
+            <div class="model-pred" id="rf-pred"  style="color:var(--muted)">—</div>
+            <div class="model-conf" id="rf-conf">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+
+    <button class="btn-primary" onclick="runPrediction()">Run Full Health Analysis</button>
+
+    <!-- Result card -->
+    <div class="result-card" id="result-card">
+
+      <div class="result-header">
+        <div class="result-icon" id="result-icon"></div>
+        <div>
+          <div class="result-label">Risk Assessment</div>
+          <div class="result-title"      id="result-title"></div>
+          <div class="result-score-line" id="result-score-line"></div>
+        </div>
+        <button class="btn-export" onclick="exportResult()">⬇ Export</button>
+      </div>
+
+      <div class="section-title">Confidence by Model</div>
+      <div class="confidence-row">
+        <span class="conf-label">Logistic Reg.</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="lr-bar"  style="width:0%"></div></div>
+        <span class="conf-val" id="lr-pct"></span>
+      </div>
+      <div class="confidence-row">
+        <span class="conf-label">KNN</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="knn-bar" style="width:0%"></div></div>
+        <span class="conf-val" id="knn-pct"></span>
+      </div>
+      <div class="confidence-row">
+        <span class="conf-label">Decision Tree</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="dt-bar"  style="width:0%"></div></div>
+        <span class="conf-val" id="dt-pct"></span>
+      </div>
+      <div class="confidence-row">
+        <span class="conf-label">Random Forest</span>
+        <div class="conf-bar-bg"><div class="conf-bar" id="rf-bar"  style="width:0%"></div></div>
+        <span class="conf-val" id="rf-pct"></span>
+      </div>
+
+      <div class="risk-gauge" style="margin-top:1.2rem">
+        <div class="section-title">Ensemble Risk Score</div>
+        <div class="gauge-track">
+          <div class="gauge-needle" id="gauge-needle" style="left:10%"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>0.0 Safe</span><span>0.3</span><span>0.5</span><span>0.7</span><span>1.0 High Risk</span>
+        </div>
+      </div>
+
+      <div class="warnings-list"  id="warnings-list"></div>
+      <div class="recommendations" id="recommendations"></div>
+
+    </div><!-- /result-card -->
+  </div><!-- /tab-predict -->
+
+
+  <!-- ════════════════════════════════════
+       VIZ TAB
+       ════════════════════════════════════ -->
+  <div id="tab-viz" class="hidden">
+
+    <div class="card-full">
+      <div class="section-title">Feature Importance (Decision Tree)</div>
+      <div class="feat-importance">
+        <div class="feat-row">
+          <span class="feat-name">Blood Pressure</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:78%;background:var(--danger)"></div></div>
+          <span class="feat-val">0.78</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Cholesterol</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:62%;background:var(--danger)"></div></div>
+          <span class="feat-val">0.62</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Heart Rate</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:51%;background:var(--moderate)"></div></div>
+          <span class="feat-val">0.51</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Age</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:45%;background:var(--moderate)"></div></div>
+          <span class="feat-val">0.45</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Smoking</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:40%;background:var(--moderate)"></div></div>
+          <span class="feat-val">0.40</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Activity Level</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:33%;background:var(--safe)"></div></div>
+          <span class="feat-val">0.33</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Interactive Decision Boundary</div>
+      <div class="viz-controls">
+        <label>Model:</label>
+        <select id="viz-model" onchange="drawBoundary()">
+          <option value="lr">Logistic Regression</option>
+          <option value="knn">KNN (k=7)</option>
+          <option value="dt">Decision Tree</option>
+          <option value="rf">Random Forest</option>
+        </select>
+        <label>X Axis:</label>
+        <select id="viz-xfeature" onchange="drawBoundary()">
+          <option value="bp">Blood Pressure</option>
+          <option value="chol">Cholesterol</option>
+          <option value="age">Age</option>
+        </select>
+      </div>
+      <canvas class="boundary-canvas" id="boundaryCanvas"></canvas>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem">
+        Y-axis is always Heart Rate. Other features are fixed at default values. Dots = training samples.
+      </p>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Confusion Matrix (Test Set)</div>
+      <div class="confusion-grid">
+        <div class="cm-cell" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)">
+          <div class="cm-val" style="color:var(--safe)">42</div>
+          <div class="cm-label">True Negative</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:4px">Correctly safe</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2)">
+          <div class="cm-val" style="color:var(--moderate)">5</div>
+          <div class="cm-label">False Positive</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:4px">False alarm</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.18);border:1px solid rgba(248,113,113,0.35)">
+          <div class="cm-val" style="color:var(--danger)">3</div>
+          <div class="cm-label">False Negative</div>
+          <div style="font-size:0.68rem;color:var(--danger);margin-top:4px">⚠ Missed risk!</div>
+        </div>
+        <div class="cm-cell" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)">
+          <div class="cm-val" style="color:var(--safe)">50</div>
+          <div class="cm-label">True Positive</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:4px">Correctly at risk</div>
+        </div>
+      </div>
+      <p style="font-size:0.73rem;color:var(--danger);margin-top:0.75rem;line-height:1.6">
+        ⚠ False negatives are especially dangerous in health contexts — a missed risk can have serious consequences. Models are tuned to minimize them.
+      </p>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Model Accuracy Comparison</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:0.5rem">
+        <div class="feat-row">
+          <span class="feat-name">Random Forest</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:93%;background:#818cf8"></div></div>
+          <span class="feat-val" style="color:#818cf8">93%</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Logistic Reg.</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:91%;background:var(--accent)"></div></div>
+          <span class="feat-val" style="color:var(--accent)">91%</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">KNN (k=7)</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:89%;background:var(--safe)"></div></div>
+          <span class="feat-val" style="color:var(--safe)">89%</span>
+        </div>
+        <div class="feat-row">
+          <span class="feat-name">Decision Tree</span>
+          <div class="feat-bar-bg"><div class="feat-bar" style="width:85%;background:var(--moderate)"></div></div>
+          <span class="feat-val" style="color:var(--moderate)">85%</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-viz -->
+
+
+  <!-- ════════════════════════════════════
+       HISTORY TAB
+       ════════════════════════════════════ -->
+  <div id="tab-history" class="hidden">
+    <div class="card-full">
+      <div class="section-title">Prediction History (last 10)</div>
+      <div id="history-list">
+        <p class="no-history">No predictions yet. Run an analysis to see history.</p>
+      </div>
+      <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+    </div>
+  </div><!-- /tab-history -->
+
+
+  <!-- ════════════════════════════════════
+       EDU TAB
+       ════════════════════════════════════ -->
+  <div id="tab-edu" class="hidden">
+
+    <div class="card-full">
+      <div class="section-title">Algorithms Used</div>
+      <div class="algo-cards">
+
+        <div class="algo-card">
+          <div class="algo-icon">σ</div>
+          <div>
+            <div class="algo-title">Logistic Regression <span class="tag tag-blue">Stable</span></div>
+            <div class="algo-desc">
+              Outputs a probability 0–1 via the sigmoid function: σ(z) = 1/(1+e⁻ᶻ).
+              The linear combination z includes all 6 features with learned weights plus interaction terms (BP×HR, Age×Chol).
+              Best for linearly-separable patterns; fast and interpretable.
+            </div>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <div class="algo-icon">K</div>
+          <div>
+            <div class="algo-title">K-Nearest Neighbors <span class="tag tag-amber">Scale-sensitive</span></div>
+            <div class="algo-desc">
+              Finds the 7 most similar patients in training data using weighted Euclidean distance (closer neighbors vote more strongly).
+              Features are normalised before computing distances. BP and Cholesterol carry higher weight (1.5×, 1.2×) reflecting clinical importance.
+            </div>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <div class="algo-icon">🌿</div>
+          <div>
+            <div class="algo-title">Decision Tree <span class="tag tag-green">Interpretable</span></div>
+            <div class="algo-desc">
+              Creates human-readable rules: IF BP &gt; 145 → Risk (94%), ELIF Cholesterol &gt; 240 AND Age &gt; 55 → Risk (75%), …
+              Easiest to explain to clinicians. Can overfit on small datasets — depth is deliberately limited.
+            </div>
+          </div>
+        </div>
+
+        <div class="algo-card">
+          <div class="algo-icon">🌲</div>
+          <div>
+            <div class="algo-title">Random Forest <span class="tag tag-purple">Ensemble</span></div>
+            <div class="algo-desc">
+              An ensemble of 5 decision trees, each trained on a bootstrap sample with slightly different split thresholds.
+              The final prediction is the average of all trees — this reduces variance and overfitting compared to a single tree,
+              typically achieving the highest accuracy of the four models.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Decision Tree Rules (Extended)</div>
+      <pre style="font-family:var(--mono);font-size:0.77rem;color:var(--muted);line-height:2;background:var(--surface2);padding:1rem;border-radius:10px;overflow-x:auto">
+IF blood_pressure > 145:
+  → <span style="color:var(--danger)">RISK (confidence: 0.94)</span>
+ELIF blood_pressure > 130:
+  IF heart_rate > 100:
+    → <span style="color:var(--danger)">RISK (confidence: 0.90)</span>
+  ELIF smoking AND age > 50:
+    → <span style="color:var(--danger)">RISK (confidence: 0.84)</span>
+  ELIF cholesterol > 240:
+    → <span style="color:var(--danger)">RISK (confidence: 0.80)</span>
+  ELIF activity_level < 3:
+    → <span style="color:var(--danger)">RISK (confidence: 0.76)</span>
+  ELSE:
+    → <span style="color:var(--moderate)">MODERATE (confidence: 0.56)</span>
+ELIF cholesterol > 240:
+  IF age > 55:
+    → <span style="color:var(--danger)">RISK (confidence: 0.75)</span>
+  ELIF smoking:
+    → <span style="color:var(--danger)">RISK (confidence: 0.70)</span>
+ELIF heart_rate > 105:
+  IF activity_level < 4:
+    → <span style="color:var(--danger)">RISK (confidence: 0.82)</span>
+ELIF smoking AND age > 50 AND activity_level < 4:
+  → <span style="color:var(--danger)">RISK (confidence: 0.72)</span>
+ELIF activity_level < 3:
+  → <span style="color:var(--moderate)">MODERATE (confidence: 0.66)</span>
+ELSE:
+  → <span style="color:var(--safe)">SAFE (confidence: 0.92)</span>
+      </pre>
+    </div>
+
+    <div class="card-full">
+      <div class="section-title">Limitations &amp; Critical Thinking</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Small synthetic dataset — not validated on real clinical data</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Missing features: weight/BMI, family history, blood glucose, ECG readings</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>KNN is sensitive to feature scaling — normalisation is applied but synthetic data limits realism</span></div>
+        <div class="warning-item"><div class="warning-dot dot-moderate"></div><span>Random Forest trees share the same feature set — true diversity requires bagged features (not implemented)</span></div>
+        <div class="warning-item"><div class="warning-dot dot-danger"></div><span>Never use as a replacement for professional medical diagnosis or treatment decisions</span></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-edu -->
+
+</div><!-- /app -->
+
+<script src="js/models.js"></script>
+<script src="js/visualization.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
