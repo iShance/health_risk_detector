@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Health Risk Detector project preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1184" height="624" rx="18" fill="url(#card)" stroke="#334155"/>
+
+  <text x="96" y="118" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="44" font-weight="700">Health Risk Detector</text>
+  <text x="96" y="156" fill="#94a3b8" font-family="Arial, sans-serif" font-size="22">ML-powered cardiovascular risk assessment dashboard</text>
+
+  <rect x="96" y="200" width="340" height="180" rx="14" fill="#0b1220" stroke="#334155"/>
+  <text x="120" y="245" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="22">Inputs</text>
+  <text x="120" y="285" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Heart Rate</text>
+  <text x="120" y="316" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Blood Pressure</text>
+  <text x="120" y="347" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Age · Cholesterol · Activity</text>
+
+  <rect x="470" y="200" width="340" height="180" rx="14" fill="#0b1220" stroke="#334155"/>
+  <text x="494" y="245" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="22">Models</text>
+  <text x="494" y="285" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Logistic Regression</text>
+  <text x="494" y="316" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">KNN · Decision Tree</text>
+  <text x="494" y="347" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Random Forest Ensemble</text>
+
+  <rect x="844" y="200" width="340" height="180" rx="14" fill="#0b1220" stroke="#334155"/>
+  <text x="868" y="245" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="22">Output</text>
+  <text x="868" y="285" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Risk Category</text>
+  <text x="868" y="316" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Model Confidence</text>
+  <text x="868" y="347" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">Recommendations</text>
+
+  <rect x="96" y="420" width="1088" height="190" rx="14" fill="#0b1220" stroke="#334155"/>
+  <text x="120" y="468" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="24">App Sections</text>
+  <text x="120" y="512" fill="#94a3b8" font-family="Arial, sans-serif" font-size="20">⚡ Prediction   ·   📊 Visualizations   ·   🕐 History   ·   📚 Algorithms</text>
+  <text x="120" y="556" fill="#22c55e" font-family="Arial, sans-serif" font-size="20">For educational/demo purposes only — not a medical diagnosis tool.</text>
+</svg>
