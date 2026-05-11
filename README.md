@@ -13,5 +13,5 @@ Health Risk Detector is a browser-based demo app for cardiovascular risk assessm
 ## Run locally
 This project is static HTML/CSS/JS.
 
-1. Open `/home/runner/work/health_risk_detector/health_risk_detector/index.html` in your browser.
+1. Open `index.html` in your browser.
 2. Use the tabs to explore Prediction, Visualizations, History, and Algorithms.
